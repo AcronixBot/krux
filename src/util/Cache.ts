@@ -1,4 +1,4 @@
-interface ITMap<T> {
+interface ITMap<T = unknown> {
     data: T,
     name: string | number
 }
