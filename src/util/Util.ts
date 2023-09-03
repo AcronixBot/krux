@@ -1,6 +1,32 @@
 import { createHash } from "crypto";
+import Logger from "./Logger";
+
+export enum locales {
+    enUS = "en-US",
+    DE = "de-DE",
+}
+
+export interface ILocal {
+    code: locales,
+    name: string
+}
 
 export default class Util {
+    static locales: ILocal[] = [
+        {
+            code: locales.DE,
+            name: 'Deutsch'
+        },
+        {
+            code: locales.enUS,
+            name: `English`
+        }
+    ]
+
+    static get defaultLocale() {
+        return this.locales.find((l) => l.code === locales.enUS);
+    }
+
     static normalizeSplatnetResourcePath(url: string | URL) {
         // Parse the URL
         let u = new URL(url);
@@ -30,5 +56,5 @@ export default class Util {
             __voroniyx_id: id,
             ...node,
         };
-    }    
+    }
 }

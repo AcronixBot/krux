@@ -1,8 +1,8 @@
 import Logger from "../util/Logger";
 import NsoManager from "./Nso";
 import Cache from "../util/Cache";
-import { GraphQLResponse } from 'splatnet3-types/dist/graphql';
-import { StageScheduleResult, CoopResult } from 'splatnet3-types/dist/splatnet3'
+import { GraphQLResponse } from "splatnet3-types/dist/graphql";
+import { CoopResult, StageScheduleResult } from "splatnet3-types/dist/splatnet3";
 
 interface BulletToken {
     bulletToken: string;
@@ -13,6 +13,13 @@ interface BulletToken {
 interface BulletTokenData {
     expire: number
     bullettoken: BulletToken
+}
+
+export enum QueryCodes {
+    COOP = "91b917becd2fa415890f5b47e15ffb15",
+    SCHEDULES = "d1f062c14f74f758658b2703a5799002",
+    FEST = "",
+    GEAR = "",
 }
 
 export default class Splatnet3Manager {
@@ -127,10 +134,8 @@ export default class Splatnet3Manager {
         return response;
     }
 
-    async getCoopData() {
-        return await this.GraphQlRequest(1, "91b917becd2fa415890f5b47e15ffb15") as GraphQLResponse<CoopResult>;
-    }
-    async getStageScheduleData() {
-        return await this.GraphQlRequest(1, "d1f062c14f74f758658b2703a5799002") as GraphQLResponse<StageScheduleResult>;
+    async getGraphQlQuery(query:QueryCodes) {
+        //TODO add type Support for more Querry 
+        return await this.GraphQlRequest(1, query) as GraphQLResponse<CoopResult | StageScheduleResult>;
     }
 }
