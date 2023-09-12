@@ -1,119 +1,123 @@
 //import CoralApi as named import for intellisense
 import { addUserAgent, CoralApi } from "nxapi";
 import Logger from "../util/Logger.js";
-import Cache from "../util/Cache.js";
+import Cache from "../util/VirtualCache.js";
 import { CoralAuthData } from "nxapi/dist/api/coral";
+import { locales } from "src/util/Util.js";
 /** @ts-ignore */
 // import CoralApi from "nxapi/coral";
 
 interface CoralAuthSafeData {
-    data: CoralAuthData,
-    expires: number
+  data: CoralAuthData;
+  expires: number;
 }
 
 interface WebservicetokenData {
-    accessToken: string,
-    expiresIn: number
+  accessToken: string;
+  expiresIn: number;
 }
 
 export function regionTokens() {
-    return {
-        EU: process.env.splatoon3EUsessionToken,
-    };
+  return {
+    EU: process.env.splatoon3EUsessionToken,
+  };
 }
 
 function getDefaultRegion() {
-    for (const [region, token] of Object.entries(regionTokens())) {
-        if (token) return region;
-    }
+  for (const [region, token] of Object.entries(regionTokens())) {
+    if (token) return region;
+  }
 
-    throw new Error("Session token not set for any region");
+  throw new Error("Session token not set for any region");
 }
 
 export default class NsoManager {
-    logger = new Logger();
-    sessionToken: string;
-    region: string;
-    cacheName = 'nso'
+  logger = new Logger();
+  sessionToken: string;
+  region: string;
+  cacheName = "nso";
 
+  constructor(sessionToken: string, region: locales) {
+    addUserAgent(process.env.USERAGENT);
 
+    this.sessionToken = sessionToken;
+    this.region = region;
+  }
 
-    constructor(sessionToken: string, region: string) {
-        addUserAgent(process.env.USERAGENT);
+  static manager(region = null) {
+    region ??= getDefaultRegion();
+    let tokens = regionTokens();
 
-        this.sessionToken = sessionToken;
-        this.region = region;
+    if (!Object.keys(tokens).includes(region)) {
+      throw new Error(`Invalid region: ${region}`);
     }
 
-    static manager(region = null) {
-        region ??= getDefaultRegion();
-        let tokens = regionTokens();
-
-        if (!Object.keys(tokens).includes(region)) {
-            throw new Error(`Invalid region: ${region}`);
-        }
-
-        let token = tokens[region];
-        if (!token) {
-            throw new Error(`Token not set for region: ${region}`);
-        }
-
-        return new NsoManager(token, region);
+    let token = tokens[region];
+    if (!token) {
+      throw new Error(`Token not set for region: ${region}`);
     }
 
-    calculateExpire(expires: number) {
-        let expire = Date.now() + expires * 1000;
-        return expire - 5 * 60 * 1000;
-    }
+    return new NsoManager(token, region);
+  }
 
-    getOrCreateCoralCache() {
-        return new Cache<CoralAuthSafeData>('coral');
-    }
+  calculateExpire(expires: number) {
+    let expire = Date.now() + expires * 1000;
+    return expire - 5 * 60 * 1000;
+  }
 
-    async coralSession() {
-        this.logger.log()
+  getOrCreateCoralCache() {
+    return new Cache<CoralAuthSafeData>("coral");
+  }
 
-        let { data } = await CoralApi.createWithSessionToken(this.sessionToken);
-        let expire = this.calculateExpire(data.credential.expiresIn);
+  async coralSession() {
+    Logger.info("Creating Coral session...", "Nso");
 
-        this.logger.log();
+    let { data } = await CoralApi.createWithSessionToken(this.sessionToken);
+    let expire = this.calculateExpire(data.credential.expiresIn);
 
-        this.getOrCreateCoralCache().setData({ data, expires: expire })
+    Logger.info(`Caching Coral session until: ${expire}`, "Nso");
 
-        return data;
-    }
+    this.getOrCreateCoralCache().setData({ data, expires: expire });
 
-    async useCoralApi() {
-        let data = (this.getOrCreateCoralCache().getData('coral') as CoralAuthSafeData).data;
-        if (!data) data = await this.coralSession();
-        return CoralApi.createWithSavedToken(data);
-    }
+    return data;
+  }
 
-    //Web Service Token
-    getOrCreateTokenCache() {
-        return new Cache<WebservicetokenData>(`webservicetoken`);
-    }
+  async useCoralApi() {
+    let data = (
+      this.getOrCreateCoralCache().getData("coral") as CoralAuthSafeData
+    ).data;
+    if (!data) data = await this.coralSession();
+    return CoralApi.createWithSavedToken(data);
+  }
 
-    async useWebServiceToken(id: number, cache: Cache<WebservicetokenData>) {
-        let coral = await this.useCoralApi();
-        this.logger.log();
+  //Web Service Token
+  getOrCreateTokenCache() {
+    return new Cache<WebservicetokenData>(`webservicetoken`);
+  }
 
-        let { accessToken, expiresIn } = await coral.getWebServiceToken(id)
+  async useWebServiceToken(id: number) {
+    let coral = await this.useCoralApi();
+    Logger.info(`Creating web service token for ID ${id}...`, "Nso");
 
-        let expire = this.calculateExpire(expiresIn);
-        this.logger.log();
-        this.getOrCreateTokenCache().setData({ accessToken, expiresIn });
+    let { accessToken, expiresIn } = await coral.getWebServiceToken(id);
 
-        return {
-            accessToken, expiresIn
-        }
-    }
+    let expire = this.calculateExpire(expiresIn);
+    Logger.info(`Caching web service token for ID ${id} until: ${expire}`, "Nso");
+    this.getOrCreateTokenCache().setData({ accessToken, expiresIn });
 
-    async getWebServiceToken(id: number) {
-        let cache = this.getOrCreateTokenCache();
-        let accessToken = (cache.getData(`webservicetoken`) as WebservicetokenData).accessToken;
-        if (!accessToken) accessToken = (await this.useWebServiceToken(id, cache)).accessToken;
+    return {
+      accessToken,
+      expiresIn,
+    };
+  }
 
-        return accessToken;
-    }
+  async getWebServiceToken(id: number) {
+    let cache = this.getOrCreateTokenCache();
+    let accessToken = (cache.getData(`webservicetoken`) as WebservicetokenData)
+      .accessToken;
+    if (!accessToken)
+      accessToken = (await this.useWebServiceToken(id)).accessToken;
+
+    return accessToken;
+  }
 }

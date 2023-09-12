@@ -1,7 +1,7 @@
 import express, { Express } from "express";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-import Cache from "../util/Cache.js";
+import Cache from "../util/VirtualCache.js";
 
 import { rateLimit as rateLimitHandler } from "express-rate-limit";
 import slowdown from "express-slow-down";

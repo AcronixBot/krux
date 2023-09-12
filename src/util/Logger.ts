@@ -59,21 +59,29 @@ export default class Logger {
     return `[${dd}]`;
   }
 
-  private static createPrefixString(prefix: string) {
-    let spaceDistance = 10 - prefix.length;
+  private static createPrefixString(prefix: string, color: Styles) {
+    return `${this.coloriseText(`[` + prefix.toUpperCase() + `]`, color)}`;
+  }
+
+  private static createProcessPrefix(processPrefix: string, color: Styles) {
+    let spaceDistance = 15 - processPrefix.length;
     let spaceString = "";
 
     for (let i = 0; i <= spaceDistance; i++) {
       spaceString += " ";
     }
-
     return `${this.coloriseText(
-      `[` + prefix.toUpperCase() + `]`,
-      "white"
-    )}${spaceString}:: `;
+      `[` + processPrefix.toUpperCase() + `]` + `${spaceString}:: `,
+      color
+    )}`;
   }
 
-  private static do(text: string | number, prefix: string, logLevel: LogLevel) {
+  private static do(
+    text: string | number,
+    prefix: string,
+    processPrefix: string,
+    logLevel: LogLevel
+  ) {
     let color: Styles = "white";
     switch (logLevel) {
       case LogLevel.DEBUG: {
@@ -98,24 +106,28 @@ export default class Logger {
     }
     console.log(
       `${this.createDateString()} ${this.createPrefixString(
-        prefix
-      )} ${this.coloriseText(text, color)}`
+        prefix,
+        color
+      )} ${this.createProcessPrefix(processPrefix, color)}${this.coloriseText(
+        text,
+        color
+      )}`
     );
   }
 
-  public static info(text: string | number) {
-    return this.do(text, "Info", LogLevel.INFO);
+  public static info(text: string | number, processPrefix: string) {
+    return this.do(text, "Info", processPrefix, LogLevel.INFO);
   }
 
-  public static debug(text: string | number) {
-    return this.do(text, "Info", LogLevel.DEBUG);
+  public static debug(text: string | number, processPrefix: string) {
+    return this.do(text, "Debug", processPrefix, LogLevel.DEBUG);
   }
 
-  public static warn(text: string | number) {
-    return this.do(text, "Info", LogLevel.WARN);
+  public static warn(text: string | number, processPrefix: string) {
+    return this.do(text, "Warn", processPrefix, LogLevel.WARN);
   }
 
-  public static error(text: string | number) {
-    return this.do(text, "Info", LogLevel.ERROR);
+  public static error(text: string | number, processPrefix: string) {
+    return this.do(text, "Error", processPrefix, LogLevel.ERROR);
   }
 }
