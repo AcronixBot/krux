@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "outDir": "dist/",
     "baseUrl": ".",
+    "sourceMap":true,
   },
   "include": [
     "src",

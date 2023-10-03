@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import NsoManager from "../nso/Nso.js";
 import ImageProcessor from "./ImageManager.js";
 import Util from "./Util.js";
@@ -30,15 +33,9 @@ export default class DynamicUpdater<TQueryType> {
   private imagePaths = [];
   private derivedIds = [];
 
-  constructor(query?: QueryCodes) {
-    this.nso = new NsoManager(
-      process.env.SESSION_TOKEN,
-      this.util.defaultLocale.code
-    );
-    this.splatnet3 = new Splatnet3Manager(
-      this.nso,
-      this.util.defaultLocale.code
-    );
+  constructor(nso:NsoManager, splatnet:Splatnet3Manager, query?: QueryCodes) {
+    this.nso = nso;
+    this.splatnet3 = splatnet;
     this.query = query;
 
     this.cache = new VirtualCache<TQueryType>(`${this.query}_cache`);
@@ -113,7 +110,18 @@ export default class DynamicUpdater<TQueryType> {
     return cache;
   }
 
-//   async isValidDataInFile(): boolean {}
+  async isLatestFileValid(): Promise<boolean> {
+    const now = Date.now();
+    const wildcard = `${this.shortQuery}_cache_*.json`;
+
+    const matchingFilePaths = glob.globSync(wildcard);
+    if(matchingFilePaths.length === 0) return false;
+
+    for(const filePath of matchingFilePaths) {
+      
+    }
+    return false;
+  }
 
   async getDataFromFile() {
     // check for file with wildcard because of Date.now()

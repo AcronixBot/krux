@@ -1,11 +1,11 @@
 //import CoralApi as named import for intellisense
-import { addUserAgent, CoralApi } from "nxapi";
+import { addUserAgent } from "nxapi";
 import Logger from "../util/Logger.js";
 import Cache from "../util/VirtualCache.js";
 import { CoralAuthData } from "nxapi/dist/api/coral";
 import { locales } from "src/util/Util.js";
 /** @ts-ignore */
-// import CoralApi from "nxapi/coral";
+import CoralApi from "nxapi/coral";
 
 interface CoralAuthSafeData {
   data: CoralAuthData;
@@ -66,7 +66,7 @@ export default class NsoManager {
   }
 
   getOrCreateCoralCache() {
-    return new Cache<CoralAuthSafeData>("coral");
+    return new Cache<CoralAuthSafeData>("coral_cache");
   }
 
   async coralSession() {
@@ -92,7 +92,7 @@ export default class NsoManager {
 
   //Web Service Token
   getOrCreateTokenCache() {
-    return new Cache<WebservicetokenData>(`webservicetoken`);
+    return new Cache<WebservicetokenData>(`webservicetoken_cache`);
   }
 
   async useWebServiceToken(id: number) {

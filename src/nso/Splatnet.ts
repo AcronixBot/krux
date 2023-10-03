@@ -1,12 +1,6 @@
-import Logger from "../util/Logger";
-import NsoManager from "./Nso";
-import Cache from "../util/VirtualCache";
-import { GraphQLResponse } from "splatnet3-types/dist/graphql";
-import {
-  CoopResult,
-  StageScheduleResult,
-} from "splatnet3-types/dist/splatnet3";
-
+import Logger from "../util/Logger.js";
+import NsoManager from "./Nso.js";
+import Cache from "../util/VirtualCache.js";
 interface BulletToken {
   bulletToken: string;
   lang: string;
@@ -62,15 +56,14 @@ export default class Splatnet3Manager {
   }
 
   async start() {
-    if (!!this.bulletToken) {
+    if (!this.bulletToken) {
       this.bulletToken = await this.getBulletToken();
     }
   }
 
   async getBulletToken() {
     let tokenCache = this.getOrCreateBulletTokenCache();
-    let bulletToken = (tokenCache.getData("bullettoken") as BulletTokenData)
-      .bullettoken;
+    let bulletToken = (tokenCache.getData("bullettoken") as BulletTokenData).bullettoken; //TODO find out why i dont get a bullet token
 
     if (!bulletToken) {
       let webservicetoken = await this.NsoManager.getWebServiceToken(
@@ -106,6 +99,7 @@ export default class Splatnet3Manager {
         "X-NACOUNTRY": "US",
         "X-GameWebToken": webservicetoken,
         "Accept-Language": this.acceptLanguage,
+        'User-Agent': process.env.NINTENDO_USER_AGENT,
       },
     });
 
@@ -143,6 +137,8 @@ export default class Splatnet3Manager {
       extensions: { persistedQuery: { version, sha256Hash } },
       variables,
     };
+
+    console.log()
 
     let graphQlRequest = await fetch(
       Splatnet3Manager.baseUrl + `/api/graphql`,

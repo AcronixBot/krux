@@ -1,8 +1,8 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as mkdirp from "mkdirp";
-import Util from "./Util";
-import Logger from "./Logger";
+import Util from "./Util.js";
+import Logger from "./Logger.js";
 const fetch = (...args: any[]) =>
   import("node-fetch").then(({ default: FetchFunction }) =>
     /** @ts-ignore */
@@ -59,7 +59,7 @@ export default class ImageProcessor {
     try {
       let result = await fetch(url);
 
-      await mkdirp.default(path.dirname(this.localPath(destination))); //TODO
+      await mkdirp.mkdirp(path.dirname(this.localPath(destination)));
       await fs.writeFile(this.localPath(destination), result.body);
     } catch (e) {
       Logger.error(

@@ -7,8 +7,12 @@ import jsonpath from "jsonpath";
 import { GraphQLResponse } from "splatnet3-types/dist/graphql";
 import {
   CoopResult,
+  FestRecordResult,
+  SaleGearDetailResult,
   StageScheduleResult,
 } from "splatnet3-types/dist/splatnet3";
+
+export type AllowdGraphQlResponses = GraphQLResponse<CoopResult | StageScheduleResult | FestRecordResult | SaleGearDetailResult>
 
 export default class DataUpdateManager {
   private ImageManager = new ImageManager();
@@ -40,7 +44,7 @@ export default class DataUpdateManager {
 
     try {
       for (const key of Object.entries(QueryCodes)) {
-        let data = await this.getData(this.Util.defaultLocale, key[1]);
+        let data = await this.getData(this.Util.defaultLocale, key[1]) as AllowdGraphQlResponses;
 
         this.deriveIds(data);
 
@@ -55,14 +59,14 @@ export default class DataUpdateManager {
     }
   }
 
-  deriveIds(data: GraphQLResponse<CoopResult | StageScheduleResult>) {
+  deriveIds(data: AllowdGraphQlResponses) {
     for (let expression of this.derivedIds) {
       jsonpath.apply(data, expression, this.Util.deriveId);
     }
   }
 
   async downloadImages(
-    data: GraphQLResponse<CoopResult | StageScheduleResult>
+    data: AllowdGraphQlResponses
   ) {
     const images = {};
 
@@ -80,7 +84,7 @@ export default class DataUpdateManager {
     return images;
   }
 
-  async safeData(data: GraphQLResponse<CoopResult | StageScheduleResult>) {
+  async safeData(data: AllowdGraphQlResponses) {
     let s = JSON.stringify(data, undefined, 2);
 
     // TODO Safe data in cache
