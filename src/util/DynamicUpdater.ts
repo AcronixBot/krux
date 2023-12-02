@@ -33,7 +33,7 @@ export default class DynamicUpdater<TQueryType> {
   private imagePaths = [];
   private derivedIds = [];
 
-  constructor(nso:NsoManager, splatnet:Splatnet3Manager, query?: QueryCodes) {
+  constructor(nso: NsoManager, splatnet: Splatnet3Manager, query?: QueryCodes) {
     this.nso = nso;
     this.splatnet3 = splatnet;
     this.query = query;
@@ -53,8 +53,9 @@ export default class DynamicUpdater<TQueryType> {
     Logger.info(`Starting the Data Update`, `DataUpdater (${this.shortQuery})`);
 
     try {
+      console.log('im try catch')
       let data = await this.getData();
-
+      console.log('this.getData() macht probleme')
       this.deriveIds(data);
 
       await this.downloadImages(data);
@@ -115,10 +116,10 @@ export default class DynamicUpdater<TQueryType> {
     const wildcard = `${this.shortQuery}_cache_*.json`;
 
     const matchingFilePaths = glob.globSync(wildcard);
-    if(matchingFilePaths.length === 0) return false;
+    if (matchingFilePaths.length === 0) return false;
 
-    for(const filePath of matchingFilePaths) {
-      
+    for (const filePath of matchingFilePaths) {
+
     }
     return false;
   }

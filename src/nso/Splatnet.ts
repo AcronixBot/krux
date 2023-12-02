@@ -56,34 +56,49 @@ export default class Splatnet3Manager {
   }
 
   async start() {
-    if (!this.bulletToken) {
-      this.bulletToken = await this.getBulletToken();
+    console.log('this.sttart vrom try catch')
+    try {
+      console.log('this.sttart im try catch')
+      if (!this.bulletToken) {
+        console.log('this.sttart im if')
+        this.bulletToken = await this.getBulletToken();
+      }
+    } catch (e) {
+      throw e;
     }
+
   }
 
   async getBulletToken() {
-    let tokenCache = this.getOrCreateBulletTokenCache();
-    let bulletToken = (tokenCache.getData("bullettoken") as BulletTokenData).bullettoken; //TODO find out why i dont get a bullet token
-
-    if (!bulletToken) {
-      let webservicetoken = await this.NsoManager.getWebServiceToken(
-        Splatnet3Manager.SplatNet3WebServiceId
-      );
-      this.createBulletToken(tokenCache, webservicetoken).then(
-        async (result) => {
-          if (result?.bulletToken) {
-            bulletToken = result;
-          } else {
-            return Logger.error(
-              "Could get a Bullet Token. Cache is empty and generation wasn't successfully!",
-              "Splatnet"
-            );
+    try {
+      console.log('im try von getBulletToken')
+      let tokenCache = this.getOrCreateBulletTokenCache();
+      console.log('nachdem tockenCache')
+      let bulletToken = tokenCache.getData("bullettoken") ? (tokenCache.getData("bullettoken") as BulletTokenData).bullettoken : null; //TODO find out why i dont get a bullet token
+      console.log('nachdem bulletToken')
+      if (!bulletToken) {
+        console.log('no bullet token')
+        let webservicetoken = await this.NsoManager.getWebServiceToken(
+          Splatnet3Manager.SplatNet3WebServiceId
+        );
+        this.createBulletToken(tokenCache, webservicetoken).then(
+          async (result) => {
+            if (result?.bulletToken) {
+              bulletToken = result;
+            } else {
+              return Logger.error(
+                "Could get a Bullet Token. Cache is empty and generation wasn't successfully!",
+                "Splatnet"
+              );
+            }
           }
-        }
-      );
-    }
+        );
+      }
 
-    return bulletToken;
+      return bulletToken;
+    } catch (e) {
+      throw e;
+    }
   }
 
   async createBulletToken(
@@ -131,37 +146,46 @@ export default class Splatnet3Manager {
     sha256Hash: string,
     variables: unknown = {}
   ) {
-    await this.start();
+    console.log("vorm try catch")
+    try {
+      console.log('im try catch')
+      await this.start();
+      console.log("nachdem this.start()")
+      let body: unknown = {
+        extensions: { persistedQuery: { version, sha256Hash } },
+        variables,
+      };
 
-    let body: unknown = {
-      extensions: { persistedQuery: { version, sha256Hash } },
-      variables,
-    };
+      console.log("test")
 
-    console.log()
-
-    let graphQlRequest = await fetch(
-      Splatnet3Manager.baseUrl + `/api/graphql`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.bulletToken.bulletToken}`,
-          "X-Web-View-Ver": Splatnet3Manager.webViewVersion,
-          "Content-Type": "application/json",
-          "Accept-Language": this.acceptLanguage,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    if (!graphQlRequest.ok)
-      return Logger.warn(
-        `GraphQl request stopped with a non 200 Code. Code: ${graphQlRequest.status}`,
-        "Splatnet"
+      //FIXME ab hier kommen wieder fehler - irgendwie ist der BulletToken immernoch leer
+      console.log(this.bulletToken) // das hier sagt es ist null
+      let graphQlRequest = await fetch(
+        Splatnet3Manager.baseUrl + `/api/graphql`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.bulletToken.bulletToken}`,
+            "X-Web-View-Ver": Splatnet3Manager.webViewVersion,
+            "Content-Type": "application/json",
+            "Accept-Language": this.acceptLanguage,
+          },
+          body: JSON.stringify(body),
+        }
       );
 
-    let response = await graphQlRequest.json();
-    return response;
+      if (!graphQlRequest.ok)
+        return Logger.warn(
+          `GraphQl request stopped with a non 200 Code. Code: ${graphQlRequest.status}`,
+          "Splatnet"
+        );
+
+      let response = await graphQlRequest.json();
+      return response;
+    } catch (E) {
+      throw E;
+    }
+
   }
 
   async getGraphQlQuery<T>(query: QueryCodes) {

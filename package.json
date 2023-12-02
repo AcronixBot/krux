@@ -2,7 +2,7 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/src/index RUST_BACKTRACE=1",
-    "server": "npx tsc && node dist/src/index RUST_BACKTRACE=1"
+    "server": "tsc && node ./dist/index.js RUST_BACKTRACE=1"
   },
   "type": "module",
   "devDependencies": {

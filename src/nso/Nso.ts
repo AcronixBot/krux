@@ -83,9 +83,9 @@ export default class NsoManager {
   }
 
   async useCoralApi() {
-    let data = (
+    let data = this.getOrCreateCoralCache().getData("coral") ? (
       this.getOrCreateCoralCache().getData("coral") as CoralAuthSafeData
-    ).data;
+    ).data : null;
     if (!data) data = await this.coralSession();
     return CoralApi.createWithSavedToken(data);
   }
@@ -95,7 +95,7 @@ export default class NsoManager {
     return new Cache<WebservicetokenData>(`webservicetoken_cache`);
   }
 
-  async useWebServiceToken(id: number) {
+  async createWebServiceToken(id: number) {
     let coral = await this.useCoralApi();
     Logger.info(`Creating web service token for ID ${id}...`, "Nso");
 
@@ -113,10 +113,10 @@ export default class NsoManager {
 
   async getWebServiceToken(id: number) {
     let cache = this.getOrCreateTokenCache();
-    let accessToken = (cache.getData(`webservicetoken`) as WebservicetokenData)
-      .accessToken;
+    let accessToken = cache.getData('webservicetoken') ? (cache.getData(`webservicetoken`) as WebservicetokenData)
+      .accessToken : null;
     if (!accessToken)
-      accessToken = (await this.useWebServiceToken(id)).accessToken;
+      accessToken = (await this.createWebServiceToken(id)).accessToken;
 
     return accessToken;
   }

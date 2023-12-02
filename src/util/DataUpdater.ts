@@ -55,7 +55,8 @@ export default class DataUpdateManager {
         Logger.info("Done", "DataUpdater");
       }
     } catch (e) {
-      return Logger.error(e, "DataUpdater");
+      // return Logger.error(e, "DataUpdater");
+      throw e;
     }
   }
 
