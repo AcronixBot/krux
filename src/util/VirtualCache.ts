@@ -21,7 +21,7 @@ export default class VirtualCache<T> {
     return isInCache;
   }
 
-  getData(name?: string | number): T | ITMap<T>[] {
+  getData(name?: string | number) {
     if (name) {
       try {
         let data = this.container.get(name);
